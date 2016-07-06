@@ -1,0 +1,13 @@
+PunchCard Grapher displays activity as a circle radius and plots the circles according to day and hour of day.
+-This could be used to display punch in/out activity
+
+1 hour of work = activity
+overlap bubble graph by showing overlap of daily activity for each week 
+
+Use punch card py as front end graphing summary with back end
+One graph would be very powerful and have a list beneath it or possibly annotation to tell you average daily hours worked
+
+Possibly have week selection to show a graph of only that week
+
+Possibly remake graphing back end at a low level pixel per pixel basis although I don't know how to port over the fonts, Possibly cairo?
+Possibly grab a look back at punchcard py repository created on github at https://github.com/fogleman/Punchcard.git 
