@@ -22,7 +22,7 @@ class Task():
         if type(endtime) is datetime:
             if endtime > starttime:
                 self.End = endtime
-            else: 
+            else:
                 raise Exception("Argument Error: End time cannot be less than start time!")
 
     def __str__(self):
@@ -54,11 +54,15 @@ class Task():
         export["TaskEnd"] = tEnd
         return export
 
-    def getDurationInSeconds(self):
-        return (self.End - self.Start).total_seconds()
+    #TODO Possible exception when self.End is None
+    def getDurationInSeconds(self, toTime=None):
+        if toTime is None or type(toTime) is not datetime:
+            toTime = self.End
+        return (toTime - self.Start).total_seconds()
 
-    def getDurationInHours(self):
-        hours = Task.secondsToHours(self.getDurationInSeconds())
+    #TODO Possible exception when self.End is None
+    def getDurationInHours(self, toTime=None):
+        hours = Task.secondsToHours(self.getDurationInSeconds(toTime))
         return hours
 
     def getStartTime(self):
@@ -141,7 +145,7 @@ class PunchCardGrapher:
         data = data/float(np.max(data))
         data_ax1 = data_ax1/float(np.max(data_ax1))
         data_ax2 = data_ax2/float(np.max(data_ax2))
-  
+
         # Assign plot to class instance variable
         self.plot = plot
         # shape ratio
@@ -186,7 +190,7 @@ class TaskManager():
     def get(self, taskName):
         if taskName not in self.Tasks.keys():
             return None
-        return self.Tasks[taskName] 
+        return self.Tasks[taskName]
 
     def set(self, taskName, taskData):
         self.Tasks[taskName] = taskData
@@ -272,7 +276,7 @@ class TaskManager():
         self.fromJson(data)
 
     def run(self, args):
-        global SAVE_FILE 
+        global SAVE_FILE
         if len(args) <= 1:
             print(HELP_DOC)
             return
@@ -345,21 +349,34 @@ class TaskManager():
             taskList = self.Tasks[taskName]
         except:
             raise Exception("Task {0} doesn't exist!".format(taskName))
+        runningTasks = []
         entireDurationInSeconds = 0
         avgStartTimeInSeconds = 0
         avgEndTimeInSeconds = 0
         taskCount = 0
         for t in taskList:
-            if t.getEndTime() is None:
-                continue
             taskCount += 1
+            if t.getEndTime() is None:
+                runningTasks.append(t)
+                continue
             avgStartTimeInSeconds -= avgStartTimeInSeconds / taskCount
             avgStartTimeInSeconds += t.getStartTime().timestamp() / taskCount
             avgEndTimeInSeconds -= avgEndTimeInSeconds / taskCount
             avgEndTimeInSeconds += t.getEndTime().timestamp() / taskCount
             entireDurationInSeconds += t.getDurationInSeconds()
         avgDurationInSeconds = (entireDurationInSeconds / taskCount) if taskCount != 0 else 0
-        return "{0} Tasks\nTotal Duration = {1}\nAverage Start Time = {2}\nAverage End Time = {3}".format(taskCount, entireDurationInSeconds, datetime.fromtimestamp(avgStartTimeInSeconds), datetime.fromtimestamp(avgEndTimeInSeconds))
+        retString = str(taskCount) + " Total Tasks\n"
+        retString += "    {0} Finished\n".format(taskCount - len(runningTasks))
+        if len(runningTasks) > 0:
+            retString += "    {0} Running\n".format(len(runningTasks))
+        for i in range(len(runningTasks)):
+            retString += "        Running Task #{0}\n".format(i + 1)
+            retString += "            Started: {0}\n".format(runningTasks[i].getStartTime())
+            retString += "            Duration: {0} Hrs.\n".format(runningTasks[i].getDurationInHours(datetime.now()))
+        retString += "Total Duration = {0}\n".format(entireDurationInSeconds)
+        retString += "Average Start Time = {0}\n".format(datetime.fromtimestamp(avgStartTimeInSeconds))
+        retString += "Total End Time = {0}".format(datetime.fromtimestamp(avgEndTimeInSeconds))
+        return retString
 
     def handlePrintArg(self, args):
         if len(args) >= 1 and args[0].lower() == "summary":
@@ -386,7 +403,7 @@ class TaskManager():
                 for y in self.Tasks.values():
                     for x in y:
                         allTasks.append(x)
-                plt = PunchCardGrapher(allTasks) 
+                plt = PunchCardGrapher(allTasks)
                 plt.show()
             elif len(args) == 2:
                 taskList = self.get(args[1])
@@ -399,7 +416,7 @@ class TaskManager():
             else:
                 print("Argument Error: Too many arguments given while displaying tasks!")
                 print(HELP_DOC)
-    
+
     def handleCalcArg(self, args):
         if len(args) >= 4:
             incomeTax = 0
