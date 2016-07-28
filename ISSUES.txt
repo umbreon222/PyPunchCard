@@ -1,0 +1,6 @@
+ISSUES:
+    Possible exception when self.End is None
+    Possible exception when self.End is None
+    Actually use the variable avgDurationInSeconds
+    Average start time and end time are broken, you can't Average
+    Implement WeekSummary.py into summary options of PyPunchCard.py
