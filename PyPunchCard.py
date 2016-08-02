@@ -2,7 +2,7 @@
 
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 #Needs an option to check time of currently punched in task
 
@@ -195,6 +195,35 @@ class TaskManager():
     def set(self, taskName, taskData):
         self.Tasks[taskName] = taskData
 
+    def getCurrentWeekStart(self):
+        dt = datetime.now()
+        return dt - timedelta(days=dt.weekday())
+
+    def getCurrentWeekEnd(self):
+        dt = datetime.now()
+        start = dt - timedelta(days=dt.weekday())
+        return start + timedelta(days=6)
+
+    def calculateHoursSpentInCurrentWeek(self, taskName):
+        #Figure out the day of the week, get ctimes between monday and sunday
+        #Print summary based on selected task and times that fit between start and end of week
+        minimumStartTime = self.getCurrentWeekStart() #get start of week days
+        minimumStartTime = datetime(minimumStartTime.year, minimumStartTime.month, minimumStartTime.day) #reset the time to beginning of day
+        maximumEndTime = minimumStartTime + timedelta(days=7) #add 24 * 7 hours.. this could be wrong
+        hoursThisWeek = 0
+        for task in self.get(taskName):
+            if task.getStartTime() >= minimumStartTime:
+                dur = 0
+                if task.getEndTime() is not None:
+                    if task.getEndTime() <= maximumEndTime:
+                        dur = task.getDurationInHours()
+                    else:
+                        continue
+                else:
+                    dur = task.getDurationInHours(datetime.now())
+                hoursThisWeek += dur
+        return hoursThisWeek
+
     def calculateAveragePay(self, taskList, hourlyPay, incomeTax):
         ret = 0
         for task in taskList:
@@ -344,6 +373,8 @@ class TaskManager():
             print(HELP_DOC)
 
     #TODO Actually use the variable avgDurationInSeconds
+    #TODO Average start time and end time are broken, you can't Average
+    # dates with different days.
     def getTaskSummary(self, taskName):
         try:
             taskList = self.Tasks[taskName]
@@ -365,17 +396,16 @@ class TaskManager():
             avgEndTimeInSeconds += t.getEndTime().timestamp() / taskCount
             entireDurationInSeconds += t.getDurationInSeconds()
         avgDurationInSeconds = (entireDurationInSeconds / taskCount) if taskCount != 0 else 0
-        retString = str(taskCount) + " Total Tasks\n"
+        retString = str(taskCount) + " Total Sub-Tasks\n"
         retString += "    {0} Finished\n".format(taskCount - len(runningTasks))
         if len(runningTasks) > 0:
             retString += "    {0} Running\n".format(len(runningTasks))
         for i in range(len(runningTasks)):
-            retString += "        Running Task #{0}\n".format(i + 1)
+            retString += "        Running Sub-Task #{0}\n".format(i + 1)
             retString += "            Started: {0}\n".format(runningTasks[i].getStartTime())
             retString += "            Duration: {0} Hrs.\n".format(runningTasks[i].getDurationInHours(datetime.now()))
-        retString += "Total Duration = {0}\n".format(entireDurationInSeconds)
-        retString += "Average Start Time = {0}\n".format(datetime.fromtimestamp(avgStartTimeInSeconds))
-        retString += "Total End Time = {0}".format(datetime.fromtimestamp(avgEndTimeInSeconds))
+        retString += "Hours Spent This Week = {0}\n".format(self.calculateHoursSpentInCurrentWeek(taskName))
+        retString += "Total Duration = {0}".format(entireDurationInSeconds)
         return retString
 
     def handlePrintArg(self, args):
@@ -388,7 +418,7 @@ class TaskManager():
             elif len(args) == 2:
                 try:
                     tSummary = self.getTaskSummary(args[1])
-                    print("Summary of task '{0}'")
+                    print("Summary of task '{0}'".format(args[1]))
                     print(tSummary)
                     print()
                 except Exception as e:
