@@ -408,7 +408,7 @@ class TaskManager():
             retString += "            Started: {0}\n".format(runningTasks[i].get_start_time())
             retString += "            Duration: {0} Hrs.\n".format(runningTasks[i].get_duration_in_hours(datetime.now()))
         retString += "Hours Spent This Week = {0}\n".format(self.calculateHoursSpentInCurrentWeek(taskName))
-        retString += "Total Duration = {0}".format(entireDurationInSeconds)
+        retString += "Total Duration = {0}(s)".format(entireDurationInSeconds)
         return retString
 
     def handlePrintArg(self, args):
