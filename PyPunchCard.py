@@ -4,12 +4,14 @@ import json
 import sys
 from datetime import datetime, timedelta
 
-#Needs an option to check time of currently punched in task
+# Needs an option to check time of currently punched in task
 
 SAVE_FILE = "TASK_MEMORY.json"
 HELP_DOC = "{0}\n\n    Punch (in|out|i|o) [TaskName]    -    Punch in or out of a task\n\n    List Tasks                       -    Lists currently created tasks\n\n    List Task [TaskName]             -    Lists punch clock records for the task\n\n    Print Summary                    -    Prints a summary of all tasks\n\n    Print Summary [TaskName]         -    Prints a summary of the task\n\n    Display Tasks                    -    Displays a punch card graph of all tasks\n\n    Display Task [TaskName]          -    Displays a punch card graph of the task\n\n    Calc Avg Pay [TaskName] \n    [HourlyWage] \n    (Optional)[IncomeTax]            -    Displays a rough average net income for \n                                          a task\n"
-class Task():
-    _DateFormat = '%Y-%m-%dT%H:%M:%S' #2009-05-13T19:19:30
+
+
+class Task:
+    _DateFormat = '%Y-%m-%dT%H:%M:%S'  # 2009-05-13T19:19:30
     End = None
 
     def __init__(self, name, starttime=None, endtime=None):
@@ -26,56 +28,57 @@ class Task():
                 raise Exception("Argument Error: End time cannot be less than start time!")
 
     def __str__(self):
-        ret = "Name={0}\nStarted={1}".format(self.getName(), Task.dateTimeToDateTimeString(self.getStartTime()))
-        e = self.getEndTime()
+        ret = "Name={0}\nStarted={1}".format(self.get_name(), Task.date_time_to_date_time_string(self.get_start_time()))
+        e = self.get_end_time()
         if e is not None:
-            ret += "\nEnded={0}".format(Task.dateTimeToDateTimeString(e))
+            ret += "\nEnded={0}".format(Task.date_time_to_date_time_string(e))
         return ret
 
     @staticmethod
-    def secondsToHours(seconds):
-        return (seconds / 60 / 60)
+    def seconds_to_hours(seconds):
+        return seconds / 60 / 60
 
     @staticmethod
-    def dateTimeStringToDateTime(dtString):
-        return datetime.strptime(dtString, Task._DateFormat)
+    def date_time_string_to_date_time(dtstring):
+        return datetime.strptime(dtstring, Task._DateFormat)
 
     @staticmethod
-    def dateTimeToDateTimeString(dt):
+    def date_time_to_date_time_string(dt):
         return dt.strftime(Task._DateFormat)
 
-    def toDict(self):
-        export = {}
-        export["TaskName"] = self.getName()
-        export["TaskStart"] = Task.dateTimeToDateTimeString(self.getStartTime())
-        tEnd = self.getEndTime()
-        if tEnd is not None:
-            tEnd = Task.dateTimeToDateTimeString(tEnd)
-        export["TaskEnd"] = tEnd
+    def to_dict(self):
+        export = dict()
+        export["TaskName"] = self.get_name()
+        export["TaskStart"] = Task.date_time_to_date_time_string(self.get_start_time())
+        t_end = self.get_end_time()
+        if t_end is not None:
+            t_end = Task.date_time_to_date_time_string(t_end)
+        export["TaskEnd"] = t_end
         return export
 
-    #TODO Possible exception when self.End is None
-    def getDurationInSeconds(self, toTime=None):
-        if toTime is None or type(toTime) is not datetime:
-            toTime = self.End
-        return (toTime - self.Start).total_seconds()
+    # TODO Possible exception when self.End is None
+    def get_duration_in_seconds(self, to_time=None):
+        if to_time is None or type(to_time) is not datetime:
+            to_time = self.End
+        return (to_time - self.Start).total_seconds()
 
-    #TODO Possible exception when self.End is None
-    def getDurationInHours(self, toTime=None):
-        hours = Task.secondsToHours(self.getDurationInSeconds(toTime))
+    # TODO Possible exception when self.End is None
+    def get_duration_in_hours(self, to_time=None):
+        hours = Task.seconds_to_hours(self.get_duration_in_seconds(to_time))
         return hours
 
-    def getStartTime(self):
+    def get_start_time(self):
         return self.Start
 
-    def setEndTime(self, newVal):
-        self.End = newVal
+    def set_end_time(self, new_val):
+        self.End = new_val
 
-    def getEndTime(self):
+    def get_end_time(self):
         return self.End
 
-    def getName(self):
+    def get_name(self):
         return self.Name
+
 
 class PunchCardGrapher:
     '''Construct a punchcard.
@@ -109,14 +112,14 @@ class PunchCardGrapher:
         # this is what would normally be fed into the graph
         data = {}
         for task in taskList:
-            if task.getEndTime() is None:
+            if task.get_end_time() is None:
                 continue
-            if task.getStartTime().weekday() != task.getEndTime().weekday():
+            if task.get_start_time().weekday() != task.get_end_time().weekday():
                 continue
-            if task.getStartTime().hour > task.getEndTime().hour:
+            if task.get_start_time().hour > task.get_end_time().hour:
                 continue #you cant end a task before it begins
-            wd = task.getStartTime().weekday()
-            for x in range(task.getStartTime().hour, task.getEndTime().hour + 1):
+            wd = task.get_start_time().weekday()
+            for x in range(task.get_start_time().hour, task.get_end_time().hour + 1):
                 key = (wd, x)
                 if key not in data.keys():
                     data[key] = 0
@@ -182,10 +185,10 @@ class TaskManager():
     Tasks = {} # { TaskName: [ Task1, Task2, Task3 ] }
 
     def add(self, task):
-        if task.getName() not in self.Tasks.keys():
-            self.Tasks[task.getName()] = [task]
+        if task.get_name() not in self.Tasks.keys():
+            self.Tasks[task.get_name()] = [task]
             return
-        self.Tasks[task.getName()].append(task)
+        self.Tasks[task.get_name()].append(task)
 
     def get(self, taskName):
         if taskName not in self.Tasks.keys():
@@ -212,15 +215,15 @@ class TaskManager():
         maximumEndTime = minimumStartTime + timedelta(days=7) #add 24 * 7 hours.. this could be wrong
         hoursThisWeek = 0
         for task in self.get(taskName):
-            if task.getStartTime() >= minimumStartTime:
+            if task.get_start_time() >= minimumStartTime:
                 dur = 0
-                if task.getEndTime() is not None:
-                    if task.getEndTime() <= maximumEndTime:
-                        dur = task.getDurationInHours()
+                if task.get_end_time() is not None:
+                    if task.get_end_time() <= maximumEndTime:
+                        dur = task.get_duration_in_hours()
                     else:
                         continue
                 else:
-                    dur = task.getDurationInHours(datetime.now())
+                    dur = task.get_duration_in_hours(datetime.now())
                 hoursThisWeek += dur
         return hoursThisWeek
 
@@ -228,7 +231,7 @@ class TaskManager():
         ret = 0
         for task in taskList:
             try:
-                ret += (task.getDurationInHours() * hourlyPay * (1 - incomeTax))
+                ret += (task.get_duration_in_hours() * hourlyPay * (1 - incomeTax))
             except Exception:
                 pass
         return ret
@@ -258,7 +261,7 @@ class TaskManager():
 
     def firstNotPunchedOut(self, taskList):
         for task in taskList:
-            if task.getEndTime() is None:
+            if task.get_end_time() is None:
                 return task
         return None
 
@@ -269,7 +272,7 @@ class TaskManager():
         Root = []
         for taskList in self.Tasks.values():
             for task in taskList:
-                Root.append(task.toDict())
+                Root.append(task.to_dict())
         return json.dumps(Root, indent=Indent)
 
     def fromJson(self, tasksData):
@@ -282,10 +285,10 @@ class TaskManager():
                 errorList.append(Exception("Format Exception: Element under root list wasn't a dictionary!"))
                 continue
             try:
-                tStart = Task.dateTimeStringToDateTime(i["TaskStart"])
+                tStart = Task.date_time_string_to_date_time(i["TaskStart"])
                 tEnd = i.get("TaskEnd")
                 if tEnd is not None:
-                    tEnd = Task.dateTimeStringToDateTime(tEnd)
+                    tEnd = Task.date_time_string_to_date_time(tEnd)
                 self.add(Task(i["TaskName"], tStart, tEnd))
             except Exception as e:
                 errorList.append(e)
@@ -362,7 +365,7 @@ class TaskManager():
             elif args[0][0].lower() == "o":
                 try:
                     task = self.punchOut(args[1])
-                    print("Task Duration = {0:.00} Hrs.".format(task.getDurationInHours()))
+                    print("Task Duration = {0} Hrs.".format(task.getDurationInHours()))
                 except Exception as e:
                     print("Error Punching out: " + str(e))
             else:
@@ -387,14 +390,14 @@ class TaskManager():
         taskCount = 0
         for t in taskList:
             taskCount += 1
-            if t.getEndTime() is None:
+            if t.get_end_time() is None:
                 runningTasks.append(t)
                 continue
             avgStartTimeInSeconds -= avgStartTimeInSeconds / taskCount
-            avgStartTimeInSeconds += t.getStartTime().timestamp() / taskCount
+            avgStartTimeInSeconds += t.get_start_time().timestamp() / taskCount
             avgEndTimeInSeconds -= avgEndTimeInSeconds / taskCount
-            avgEndTimeInSeconds += t.getEndTime().timestamp() / taskCount
-            entireDurationInSeconds += t.getDurationInSeconds()
+            avgEndTimeInSeconds += t.get_end_time().timestamp() / taskCount
+            entireDurationInSeconds += t.get_duration_in_seconds()
         avgDurationInSeconds = (entireDurationInSeconds / taskCount) if taskCount != 0 else 0
         retString = str(taskCount) + " Total Sub-Tasks\n"
         retString += "    {0} Finished\n".format(taskCount - len(runningTasks))
@@ -402,8 +405,8 @@ class TaskManager():
             retString += "    {0} Running\n".format(len(runningTasks))
         for i in range(len(runningTasks)):
             retString += "        Running Sub-Task #{0}\n".format(i + 1)
-            retString += "            Started: {0}\n".format(runningTasks[i].getStartTime())
-            retString += "            Duration: {0} Hrs.\n".format(runningTasks[i].getDurationInHours(datetime.now()))
+            retString += "            Started: {0}\n".format(runningTasks[i].get_start_time())
+            retString += "            Duration: {0} Hrs.\n".format(runningTasks[i].get_duration_in_hours(datetime.now()))
         retString += "Hours Spent This Week = {0}\n".format(self.calculateHoursSpentInCurrentWeek(taskName))
         retString += "Total Duration = {0}".format(entireDurationInSeconds)
         return retString
