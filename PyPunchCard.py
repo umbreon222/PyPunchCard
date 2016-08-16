@@ -256,7 +256,7 @@ class TaskManager():
         notPunchedOut = self.firstNotPunchedOut(tlist)
         if notPunchedOut is None:
             raise Exception("Argument Exception: The task '{0}' must be punched in before you can punch out!".format(taskName))
-        notPunchedOut.setEndTime(datetime.now())
+        notPunchedOut.set_end_time(datetime.now())
         return notPunchedOut
 
     def firstNotPunchedOut(self, taskList):
