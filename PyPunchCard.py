@@ -365,7 +365,7 @@ class TaskManager():
             elif args[0][0].lower() == "o":
                 try:
                     task = self.punchOut(args[1])
-                    print("Task Duration = {0} Hrs.".format(task.getDurationInHours()))
+                    print("Task Duration = {0} Hrs.".format(task.get_duration_in_hours()))
                 except Exception as e:
                     print("Error Punching out: " + str(e))
             else:
