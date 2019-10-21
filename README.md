@@ -1,5 +1,6 @@
-#**PyPunchCard** A nifty tool to track and analyze your time on tasks.#
-Available Options:
+# **PyPunchCard** A nifty tool to track and analyze your time on tasks.
+
+## Available Options:
 ------------
 *PunchCard.py*
 
